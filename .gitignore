@@ -1,0 +1,14 @@
+# Ignore all files in the workspace root
+# (unignore directories)
+#
+/*
+!/*/
+/.*/
+!.gitignore
+
+
+# Generated files that shouldn't be committed
+#
+*~
+*.o
+
