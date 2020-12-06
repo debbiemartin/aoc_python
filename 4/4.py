@@ -17,24 +17,23 @@ class AbsentFieldError(Exception):
     def __str__(self):
         return f"The field {self.field} is not present for this passport"      
 
-class PassportFields(object):
-    PASSPORT_FIELDS = [
-        "byr", 
-        "iyr",
-        "eyr",
-        "hgt",
-        "hcl",
-        "ecl",
-        "pid",
-        "cid",
-    ]
+PASSPORT_FIELDS = [
+    "byr", 
+    "iyr",
+    "eyr",
+    "hgt",
+    "hcl",
+    "ecl",
+    "pid",
+    "cid",
+]
 
 class Passport(object):
     def __init__(self):
         self.attributes = dict()
     
     def add_attr(self, attr, val):
-        if attr not in PassportFields.PASSPORT_FIELDS:
+        if attr not in PASSPORT_FIELDS:
             raise UnknownFieldError(attr)
         else:
             self.attributes[attr] = val
@@ -53,14 +52,23 @@ class PassportScanner(object):
     def __init__(self):
         self.passports = []
     
-    def _validate_byr(self, val):
-        return (int(val) >= 1920 and int(val) <= 2002)
-            
-    def _validate_iyr(self, val):
-        return (int(val) >= 2010 and int(val) <= 2020)
+    ###########################################################################
+    # Per-passport field validate definitions.                                #
+    # MUST define a _validate_{field} fn for each field in PASSPORT_FIELDS    #
+    ###########################################################################
+    def _validate_int(self, val, min, max):
+        return (int(val) >= min and int(val) <= max)
     
-    def _validate_eyr(self, val):
-        return (int(val) >= 2020 and int(val) <= 2030)
+    def _validate_regex(self, val, regex):
+        p = re.compile(regex)
+        return p.match(val) is not None
+        
+    _validate_cid = (lambda self, x: True)
+    _validate_byr = (lambda self, x: self._validate_int(x, 1920, 2002))
+    _validate_iyr = (lambda self, x: self._validate_int(x, 2010, 2020))
+    _validate_eyr = (lambda self, x: self._validate_int(x, 2020, 2030))
+    _validate_hcl = (lambda self, x: self._validate_regex(x, r"^#[0-9a-f]{6}$"))
+    _validate_pid = (lambda self, x: self._validate_regex(x, r"^[0-9]{9}$"))
         
     def _validate_hgt(self, val):
         p = re.compile("^(?P<hgt_num>[0-9]+)(?P<unit>cm|in)$")
@@ -68,27 +76,16 @@ class PassportScanner(object):
         if not m: 
             return False
         if m.group("unit") == "cm":
-            return int(m.group("hgt_num")) >= 150 and int(m.group("hgt_num")) <= 193
+            return self._validate_int(m.group("hgt_num"), 150, 193)
         else:
-            return int(m.group("hgt_num")) >= 59 and int(m.group("hgt_num")) <= 76
-    
-    def _validate_hcl(self, val):
-        p = re.compile(r"^#[0-9a-f]{6}$")
-        return p.match(val) is not None
-    
+            return self._validate_int(m.group("hgt_num"), 59, 76)
+        
     def _validate_ecl(self, val):
         accepted = ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"]
         return val in accepted
-    
-    def _validate_pid(self, val):
-        p = re.compile(r"^[0-9]{9}$")
-        return p.match(val) is not None
-    
-    def _validate_cid(self, val):
-        return True
 
     def _validate_passport(self, passport, validatefields):
-        for field in PassportFields.PASSPORT_FIELDS:
+        for field in PASSPORT_FIELDS:
             if not passport.has_attr(field):
                 if field != "cid": # this is the hack
                     return False
@@ -98,25 +95,19 @@ class PassportScanner(object):
                     return False
         return True
     
+    ###########################################################################
+    # External API                                                            #
+    ###########################################################################
     def read(self):
         with open("4/input.txt", 'r') as f:
-            lines = f.readlines()
-        
-        # Split the batch file into lists of password lines. Make sure to add 
-        # the last one 
-        passport_lines = []
-        start = 0
-        for current, line in enumerate(lines):
-            if line == "\n":
-                passport_lines.append(lines[start:current])
-                start = current + 1
-        passport_lines.append(lines[start:])
-        
-        # get the entries out of the line and add to dict
-        for passport_line in passport_lines:
+            filetxt = f.read()
+                
+        # Get the entries out of the passport and add to dict. 
+        # Passports separated by blank line (\n\n)
+        for passport in filetxt.split("\n\n"):
             p = Passport()
-            for line in passport_line:
-                for entry in line.strip("\n").split(" "):
+            for line in passport.split("\n"):
+                for entry in line.split(" "):
                     p.add_attr(entry.split(":")[0], entry.split(":")[1])
             self.passports.append(p)
        
@@ -130,4 +121,3 @@ print("PART 1:")
 ps.validate(False)
 print("PART 2:")
 ps.validate(True)
-        
