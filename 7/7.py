@@ -48,18 +48,19 @@ def count_parents(name, current_parents=list()):
             count_parents(p, current_parents)
     return len(current_parents) - 1 # the minus one is for the child in question
 
-def count_children_weighted(name):
+def count_children_weighted(name, cache=dict()):
     """
     Recursively count total number of bags contained within the specified bag
     i.e. total number of children, taking into account weight. Can be counted
     more than once so don't track which we've already processed. 
     
-    @@@ Add caching for optimisation.
+    Uses children count cache for optimisation.
     """
-    children = [(n, G.edges[name, n]["weight"]) for n in G.neighbors(name) if G.edges[name, n]["parent"] == name]
-    
-    return sum(weight * (1 + count_children_weighted(c)) for c, weight in children)
-    
+    if name not in cache: 
+        children = [(n, G.edges[name, n]["weight"]) for n in G.neighbors(name) if G.edges[name, n]["parent"] == name]
+        cache[name] = sum(weight * (1 + count_children_weighted(c)) for c, weight in children)
+
+    return cache[name]
 
 parse_input()
 
