@@ -7,12 +7,10 @@ G = nx.Graph()
 
 def parse_input():
     """
-    Parse the bag info into the "bags" global var. The key is the bag name, 
-    and entry is a list of BagChild tuples. 
-    
-    IMPORTANT: this dict is in the opposite direction to that of the input i.e.
-    it is information for each bag of the number of its own bag the PARENT BAG
-    is able to contain.
+    Parse the bag info into the global bag graph. This is a weighted 
+    undirected graph, however we do store the parent of each edge as an 
+    attribute. This pseudo-directed graph implementation allows us to be 
+    able to find neighbours in both directions. 
     """
     with open("7/input.txt", "r") as f:
         lines = f.read().split("\n")
