@@ -35,6 +35,8 @@ print("PART 2:")
 for i, inst in enumerate(instructions):
     # just pass the instruction to the run fn - easier than playing around 
     # with the list mid-iteration
+    if instructions[i].name == "acc":
+        continue
     finished, acc = run(instructions, i)
     if finished: 
         print(acc)
