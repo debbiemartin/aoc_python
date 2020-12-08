@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 
 import re
-import networkx as nx
+from collections import namedtuple
 
-G = nx.Graph()
+G = {}
+Edge = namedtuple("Edge", ["to", "weight", "parent"])
 
 def parse_input():
     """
@@ -20,33 +21,34 @@ def parse_input():
     for l in lines:
         m = r.match(l)
         assert(m is not None)
-        G.add_node(m.group("bagcol"))
+        if m.group("bagcol") not in G:
+            G[m.group("bagcol")] = set()
         if m.group("baglist") == "no other bags":
             continue
         for bag in m.group("baglist").split(", "):
             mbag = rbag.match(bag)
             assert(mbag is not None)
-            G.add_node(mbag.group("col"))
-            # parent attribute is bit of a hack to make a pseudo-digraph but be 
-            # able to use neighbours fn both ways to count both parents and 
-            # children            
-            G.add_edge(m.group("bagcol"), mbag.group("col"), 
-                       weight=int(mbag.group("num")), parent=m.group("bagcol"))
+            if mbag.group("col") not in G:
+                G[mbag.group("col")] = set()
+            G[mbag.group("col")].add(Edge(m.group("bagcol"), int(mbag.group("num")), False))
+            G[m.group("bagcol")].add(Edge(mbag.group("col"), int(mbag.group("num")), True))
 
-def count_parents(name, current_parents=list()):
+def count_parents(name, current_parents=None):
     """
     Recursively count the number of bags which are parents to the specified 
     bag. Add to the current_parents list to ensure each bag counted maximum of
     once. 
     """
+    if not current_parents:
+        current_parents = set()
     if name not in current_parents:
-        current_parents.append(name)
-        parents = [n for n in G.neighbors(name) if G.edges[name, n]["parent"] == n]
+        current_parents.add(name)
+        parents = (edge.to for edge in G[name] if not edge.parent)
         for p in parents: 
             count_parents(p, current_parents)
-    return len(current_parents) - 1 # the minus one is for the child in question
+    return len(current_parents) - 1
 
-def count_children_weighted(name, cache=dict()):
+def count_children_weighted(name, cache=None):
     """
     Recursively count total number of bags contained within the specified bag
     i.e. total number of children, taking into account weight. Can be counted
@@ -54,8 +56,10 @@ def count_children_weighted(name, cache=dict()):
     
     Uses children count cache for optimisation.
     """
+    if not cache:
+        cache = {}
     if name not in cache: 
-        children = [(n, G.edges[name, n]["weight"]) for n in G.neighbors(name) if G.edges[name, n]["parent"] == name]
+        children = ((edge.to, edge.weight) for edge in G[name] if edge.parent)
         cache[name] = sum(weight * (1 + count_children_weighted(c)) for c, weight in children)
 
     return cache[name]
@@ -67,4 +71,3 @@ print(count_parents("shiny gold"))
 
 print("PART 2:")
 print(count_children_weighted("shiny gold"))
-    
