@@ -22,29 +22,23 @@ def find_weakness(invalid):
 # Tried doing this to avoid computing permutations of all PREAMBLE_LEN each 
 # time but was actually slower... 
 #
-# def find_invalid_index():
-#    pairs = [[nums[pair[0]], nums[pair[1]]] for pair in itertools.permutations(range(0,PREAMBLE_LEN), 2)]
-#    for i in range(PREAMBLE_LEN, len(nums)):
-#        if nums[i] not in set(map(lambda x: sum(x), pairs)):
-#            return i
-#
-#        # take the i - PREAMBLE_LEN one out of the pairs and add in i
-#        # NOTE: this assumes no repeats in subarray
-#        for pair in pairs:
-#            if nums[i - PREAMBLE_LEN] in pair:
-#                pair.remove(nums[i - PREAMBLE_LEN])
-#                pair.append(nums[i])
-
 def find_invalid_index():
+    subarr = nums[:PREAMBLE_LEN]
+    sums_pairs = [
+        sum(numvars) for numvars in 
+        itertools.permutations(subarr, 2)
+    ]
+    
     for i in range(PREAMBLE_LEN, len(nums)):
-        sums_pairs = (
-            sum(numvars) for numvars in 
-            itertools.permutations(nums[i - PREAMBLE_LEN:i], 2)
-        )
- 
         if nums[i] not in sums_pairs:
             return i
 
+        # take the first PREAMBLE_LEN one of the pairs and add in i * each
+        sums_pairs = sums_pairs[PREAMBLE_LEN:]
+        subarr = subarr[1:]
+        subarr.append(nums[i])
+        for s in subarr:
+            sums_pairs.append(s + nums[i])
 
 with open("9/input.txt", "r") as f:
     nums = list(map(lambda x: int(x), f.read().split("\n")))
