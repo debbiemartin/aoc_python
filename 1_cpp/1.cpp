@@ -19,7 +19,7 @@ str_to_int (string numstr)
 vector<int>
 read_from_file (int *len) 
 {
-    ifstream     myfile("1/input.txt", ios::in);
+    ifstream     myfile("aoc/inputs/1.txt", ios::in);
     string       line;
     vector<int>  numlist;
     int          num;

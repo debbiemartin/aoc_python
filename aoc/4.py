@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+from . import utils
 import re
 
 class UnknownFieldError(Exception):
@@ -99,12 +100,11 @@ class PassportScanner(object):
     # External API                                                            #
     ###########################################################################
     def read(self):
-        with open("4/input.txt", 'r') as f:
-            filetxt = f.read()
+        sections = utils.get_sections(4)
                 
         # Get the entries out of the passport and add to dict. 
         # Passports separated by blank line (\n\n)
-        for passport in filetxt.split("\n\n"):
+        for passport in sections:
             p = Passport()
             for line in passport.split("\n"):
                 for entry in line.split(" "):
@@ -113,11 +113,12 @@ class PassportScanner(object):
        
     def validate(self, validatefields):                
         validcount = sum(1 for p in self.passports if self._validate_passport(p, validatefields))
-        print(f"valid count is {validcount}")
-        
-ps = PassportScanner()
-ps.read()
-print("PART 1:")
-ps.validate(False)
-print("PART 2:")
-ps.validate(True)
+        print(validcount)
+
+def main():       
+    ps = PassportScanner()
+    ps.read()
+    print("PART 1:")
+    ps.validate(False)
+    print("PART 2:")
+    ps.validate(True)

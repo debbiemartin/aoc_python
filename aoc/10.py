@@ -1,4 +1,6 @@
 #!/usr/bin/python3
+
+from . import utils
 from collections import defaultdict
 
 def count_hops():
@@ -13,28 +15,28 @@ def count_hops():
     counts[3] += 1
     
     return counts[1] * counts[3]
-    
+
+@utils.memoize
 def count_paths(start):
     if start == adapters[-1]:
         # 1 possible hop to device
         return 1
 
-    if start not in cache:
-        cache[start] = sum(
-            count_paths(start + hop) 
-            for hop in range(1, 4) 
-            if start + hop in adapters
-        )
+    count = sum(
+        count_paths(start + hop) 
+        for hop in range(1, 4) 
+        if start + hop in adapters
+    )
     
-    return cache[start]
+    return count
+
+def main():
+    global adapters
+    adapters = sorted(map(lambda x: int(x), utils.get_lines(10)))
+
+    print("PART 1:")
+    print(count_hops())
     
-with open("10/input.txt", "r") as f:
-    adapters = sorted(map(lambda x: int(x), f.read().split("\n")))
-
-print("PART 1:")
-print(count_hops())
-
-print("PART 2:")
-cache = {}
-print(count_paths(0))
-
+    print("PART 2:")
+    cache = {}
+    print(count_paths(0))

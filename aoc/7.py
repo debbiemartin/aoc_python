@@ -1,11 +1,12 @@
 #!/usr/bin/python3
 
+from . import utils
 import re
 from collections import namedtuple
 
 G = {}
 Edge = namedtuple("Edge", ["to", "weight", "parent"])
-
+    
 def parse_input():
     """
     Parse the bag info into the global bag graph. This is a weighted 
@@ -13,8 +14,7 @@ def parse_input():
     attribute. This pseudo-directed graph implementation allows us to be 
     able to find neighbours in both directions. 
     """
-    with open("7/input.txt", "r") as f:
-        lines = f.read().split("\n")
+    lines = utils.get_lines(7)
     
     r = re.compile(r"^(?P<bagcol>[A-Za-z ]+) bags contain (?P<baglist>[0-9A-Za-z, ]+).$")
     rbag = re.compile(r"^(?P<num>[0-9]+) (?P<col>[A-Za-z ]+) bag[s]?$")
@@ -33,22 +33,21 @@ def parse_input():
             G[mbag.group("col")].add(Edge(m.group("bagcol"), int(mbag.group("num")), False))
             G[m.group("bagcol")].add(Edge(mbag.group("col"), int(mbag.group("num")), True))
 
-def count_parents(name, current_parents=None):
+@utils.visited
+def count_parents(name):
     """
     Recursively count the number of bags which are parents to the specified 
-    bag. Add to the current_parents list to ensure each bag counted maximum of
-    once. 
+    bag. Track visited to ensure each bag counted maximum of once. 
     """
-    if not current_parents:
-        current_parents = set()
-    if name not in current_parents:
-        current_parents.add(name)
-        parents = (edge.to for edge in G[name] if not edge.parent)
-        for p in parents: 
-            count_parents(p, current_parents)
-    return len(current_parents) - 1
+    parents = [edge.to for edge in G[name] if not edge.parent]
+    
+    count = sum(count_parents(p) for p in parents)
+    
+    return 1 + count # count self
 
-def count_children_weighted(name, cache=None):
+
+@utils.memoize
+def count_children_weighted(name):
     """
     Recursively count total number of bags contained within the specified bag
     i.e. total number of children, taking into account weight. Can be counted
@@ -56,18 +55,17 @@ def count_children_weighted(name, cache=None):
     
     Uses children count cache for optimisation.
     """
-    if not cache:
-        cache = {}
-    if name not in cache: 
-        children = ((edge.to, edge.weight) for edge in G[name] if edge.parent)
-        cache[name] = sum(weight * (1 + count_children_weighted(c)) for c, weight in children)
+    
+    children = ((edge.to, edge.weight) for edge in G[name] if edge.parent)
+    count = sum(weight * (1 + count_children_weighted(c)) for c, weight in children)
 
-    return cache[name]
+    return count
 
-parse_input()
-
-print("PART 1:")
-print(count_parents("shiny gold"))
-
-print("PART 2:")
-print(count_children_weighted("shiny gold"))
+def main():    
+    parse_input()
+    
+    print("PART 1:")
+    print(count_parents("shiny gold") - 1) # minus off the bag itself
+    
+    print("PART 2:")
+    print(count_children_weighted("shiny gold"))
