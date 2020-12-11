@@ -9,6 +9,7 @@ class Seat(object):
         self.n_adj = 0
         self.filled = False
         self.neighbours = []
+        self.to_check = True
     
     def add_neighbour(self, neighbour):
         self.neighbours.append(neighbour)
@@ -16,7 +17,6 @@ class SeatSim(object):
     """
     Seat simulator. Iterates the seat map in time intervals. 
     """
-       
     def __init__(self, part2=False):
         self.seatmap = {}
         self.part2 = part2
@@ -24,8 +24,11 @@ class SeatSim(object):
         lines = utils.get_lines(11)
         self.YMAX = len(lines)
         self.XMAX = len(lines[0])
-        for x, y in ((x, y) for y, line in enumerate(lines) for x in range(len(line)) if line[x] == "L"):
-            self.seatmap[(x, y)] = Seat()
+        for coord in (
+            (x, y) for y, line in enumerate(lines) 
+            for x in range(len(line)) if line[x] == "L"
+        ):
+            self.seatmap[coord] = Seat()
         self.neighbour_incrs = set(itertools.permutations([-1,-1,0,1,1], 2))
         
         # Work out each seat's neighbours up front
@@ -64,29 +67,27 @@ class SeatSim(object):
     def _iterate(self):
         changes = []
         
-        #@@@ could pass through an array to check - all first time then
-        #    ones who've had n_adj changed the second
-        for y in range(self.YMAX):
-            for x in range(self.XMAX):
-                # don't process floor space
-                if (x,y) not in self.seatmap:
-                    continue
-                
-                seat = self.seatmap[(x,y)]
-                
-                # Empty or fill seat depending on number adjacent
-                if ((seat.filled and 
-                    (seat.n_adj >= 5 or seat.n_adj == 4 and not self.part2)) or 
-                    (not seat.filled and seat.n_adj == 0)):
-                    changes.append((x,y))
-        
+        for coord, seat in self.seatmap.items():
+            # don't process floor space
+            if not seat.to_check:
+                continue        
+            
+            # Empty or fill seat depending on number adjacent
+            if ((seat.filled and 
+                (seat.n_adj >= 5 or seat.n_adj == 4 and not self.part2)) or 
+                (not seat.filled and seat.n_adj == 0)):
+                changes.append(coord)
+            
+            seat.to_check = False
+
         # Apply the changes to seatmap
         for coord in changes:
             seat = self.seatmap[coord]
             seat.filled = not seat.filled
-            
+
             for neighbour in seat.neighbours:
                 self.seatmap[neighbour].n_adj += (1 if seat.filled else -1)
+                self.seatmap[neighbour].to_check = True
 
         return len(changes) != 0
                
@@ -97,15 +98,14 @@ class SeatSim(object):
                 break
         
         return sum(1 for seat in self.seatmap.values() if seat.filled)
-    
-    #@@@ reset function instead of making fresh class for part 2?
+
 
 def main():  
     s = SeatSim()
     
     print("PART 1:")
     print(s.iterate_until_static())
-    
+
     s = SeatSim(True)
     
     print("PART 2:")
