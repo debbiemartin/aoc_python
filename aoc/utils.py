@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import os
+from collections import namedtuple
 
 def get_lines(day):
     with open(os.path.join("inputs", f"{day}.txt"), "r") as f:
@@ -33,4 +34,8 @@ def visited(func):
         return result
 
     return visited_func
+
+
+def add_coord(coord1, coord2):
+    return (coord1[0] + coord2[0], coord1[1] + coord2[1])
     
