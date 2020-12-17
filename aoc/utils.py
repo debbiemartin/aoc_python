@@ -37,5 +37,5 @@ def visited(func):
 
 
 def add_coord(coord1, coord2):
-    return (coord1[0] + coord2[0], coord1[1] + coord2[1])
+    return tuple(x + y for x, y in zip(coord1, coord2))
     

@@ -14,6 +14,7 @@ class FieldMap(object):
         self.solved[rulenum] = fieldnum
     
     def _check_rulenum(self, rulenum):
+        # Check whether only one field is possible for the rule 
         if len(self.map[rulenum]) != 1 or self.solved[rulenum] != None:
             return
         
