@@ -38,4 +38,11 @@ def visited(func):
 
 def add_coord(coord1, coord2):
     return tuple(x + y for x, y in zip(coord1, coord2))
-    
+
+
+def rotate(lines):
+    return ["".join(line[i] for line in lines[::-1]) for i in range(len(lines))]
+
+
+def flip(lines):
+    return [line[::-1] for line in lines]
