@@ -2,8 +2,6 @@ from . import utils
 from functools import reduce
 import math
 
-
-
 class Monster(object):
     MONSTER = [
     "                  # ",
