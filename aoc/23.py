@@ -1,64 +1,77 @@
-import copy 
+from collections import defaultdict
+import numpy as np
 
 start="643719258"
 mod = 1
 
-def move(current, cups): 
-    # work out which 3 cups we are moving 
+def move(current, nexts):
+    # want to move the three cups after current
+    next = current
+    picked = []
+    for _ in range(3):
+        next = nexts[next]
+        picked.append(next)
+    
+    # move current to point to the last picked's next
+    nexts[current] = nexts[picked[2]]
+
+    # work out dest
+    dest = current
     global mod
-    picked = [cups[(current + 1 + i)%mod] for i in range(3)]
-            
-    # get the destination - current - 1 until we get to one in the remaining 
-    # pack, remembering to wrap back around to 9.
-    dest = cups[current]
     while True:
         dest = (dest-2)%mod + 1
         if dest not in picked:
             break
+     
+    # move dest to point to picked[0] and 
+    nexts[picked[2]] = nexts[dest]
+    nexts[dest] = picked[0]
     
-    # shuffle the array to be able to fit the cups in at dest
-    dest_index = cups.index(dest)
-    if dest_index > current:
-        for i in range(dest_index - current - 3):
-            cups[(current + 1 + i)%mod] = cups[(current + 4 + i)%mod]
-        for i in range(3):
-            cups[(dest_index - 2 + i)%mod] = picked[i]
-        current = (current+1)%mod
-    else:
-        # dest_index < current
-        for i in range(current - dest_index - 1, -1, -1):
-            cups[(dest_index + 4 + i)%mod] = cups[(dest_index + 1 + i)%mod]
-        for i in range(3):
-            cups[(dest_index + 1 + i)%mod] = picked[i]
-        current = (current+4)%mod
-   
-    return current, cups
+    current = nexts[current]
+    
+    return current, nexts
 
-def do_n_moves(cups, n):
-    current = 0
-    global mod
-    mod = len(cups)
-    
+def do_n_moves(nexts, current, n):   
     for i in range(n):
-        print(f"doing move {i}")
-        current, cups = move(current, cups)
+        current, nexts = move(current, nexts)
     
-    return cups
+    return nexts
 
 def hundred_moves(cups):
-    cups = copy.deepcopy(cups)
+    global mod
+    mod = 9
+    nexts = {cups[i]: cups[(i + 1)%9] for i in range(9)}
+       
+    nexts = do_n_moves(nexts, cups[0], 100)
     
-    cups = do_n_moves(cups, 100)
- 
-    index1 = cups.index(1)
-    return "".join(str(cups[(index1 + i) % len(cups)]) for i in range(1, len(cups)))
+    # Make the string of the nexts circularly from 1 non-inclusive
+    ret = ""
+    curr = 1
+    while True:
+        curr = nexts[curr]
+        if curr == 1:
+            break
+        ret += str(curr)   
+    
+    return ret
 
-def million_moves(cups):
-    cups = copy.deepcopy(cups) + [10 + i for i in range(999990)]
+def tenmillion_moves(cups):
+    global mod
+    mod = 1000000
     
-    cups = do_n_moves(cups, 10000000)
-    
-    return  cups[(cups.index(1) + 1) % len(cups)] * cups[(cups.index(1) + 2) % len(cups)]
+    # Make the nexts array by padding up to a million
+    nexts = [None] * (mod + 1)
+    for i in range(len(cups)-1):
+        nexts[cups[i]] = cups[i+1]
+    nexts[cups[-1]] = len(cups) + 1    
+
+    for i in range(len(cups) + 1, mod):
+        nexts[i] = i+1
+    nexts[mod] = cups[0]
+        
+    nexts = do_n_moves(np.array(nexts), cups[0], 10000000)
+        
+    return nexts[1] * nexts[nexts[1]]
 
 def main():
     cups = list(map(lambda x: int(x), start))   
@@ -67,5 +80,4 @@ def main():
     print(hundred_moves(cups))
     
     print("PART 2:")
-    #print(million_moves(cups))
-    
+    print(tenmillion_moves(cups))
