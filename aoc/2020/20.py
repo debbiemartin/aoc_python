@@ -1,4 +1,4 @@
-from . import utils
+from .. import utils
 from functools import reduce
 import math
 
@@ -10,30 +10,30 @@ class Monster(object):
     ]
     width = len(MONSTER[0])
     length = len(MONSTER)
-    hashs = [(i,j) for i, line in enumerate(MONSTER) for j, char in enumerate(line) if char == "#"]       
-    
+    hashs = [(i,j) for i, line in enumerate(MONSTER) for j, char in enumerate(line) if char == "#"]
+
 
 class Tile(object):
     tile_size = 0
-    
+
     def __init__(self, lines):
         self.id = lines[0].strip(":").strip("Tile ")
-        
+
         self.lines = lines[1:]
         self.size = len(self.lines[0])
-    
+
     @property
     def sides(self):
-        return [self.lines[0], "".join(line[-1] for line in self.lines), 
+        return [self.lines[0], "".join(line[-1] for line in self.lines),
                 self.lines[-1][::-1], "".join([line[0] for line in reversed(self.lines)])]
-    
+
     def strip_edges(self):
-        # Strip one line off all the edges. This irreversibly changes 
+        # Strip one line off all the edges. This irreversibly changes
         # self.lines
         self.lines = list(map(lambda line: line[1:-1], self.lines[1:-1]))
         if Tile.tile_size == 0:
             Tile.tile_size = len(self.lines)
-    
+
     def _try_rotation(self, sides, matches):
         # 1 CONSTRAINT
         # Position the tile with the matching side as the side number specified
@@ -43,9 +43,9 @@ class Tile(object):
             self.lines = utils.rotate(self.lines)
 
     def orientate(self, sides, matches):
-        # sides is the indices of the end orientation, in which the sides of 
+        # sides is the indices of the end orientation, in which the sides of
         # specified indices must appear in the matches list
-        
+
         if not self._try_rotation(sides, matches):
             self.lines = utils.flip(self.lines)
             assert(self._try_rotation(sides, matches))
@@ -56,9 +56,9 @@ class Board(object):
         self.extent = int(math.sqrt(len(tiles)))
         self.grid = self._solve()
         self.image = self._glue_grid()
-    
+
     def _traverse(self, get_current, get_prev, side_current, side_prev, grid):
-        # traverse a row or column by supplying get_current and get_prev 
+        # traverse a row or column by supplying get_current and get_prev
         # accessors, matching a tile with specified sides each time. Assumes
         # sides direct oppositely
         for i in range(1, self.extent):
@@ -71,7 +71,7 @@ class Board(object):
             else:
                 # didn't find a match
                 assert(False)
-       
+
     def _solve(self):
         grid = {}
         # Find a corner - a tile which matches only 2 other tiles
@@ -83,30 +83,30 @@ class Board(object):
                     if any(side == side2 or side == side2[::-1] for side2 in t2.sides):
                         matches.append(side)
                         break
-            
+
             if len(matches) == 2:
                 grid[(0,0)] = t1_id
                 break
         else:
             # Didn't find a corner
-            assert(False)                
-        
+            assert(False)
+
         # Position the corner
         self.tiles[grid[(0,0)]].orientate([1, 2], matches)
-        
+
         # Solve the 0th row
-        # Match the side 3 (left) of a new tile to side 1 (right) of the 
+        # Match the side 3 (left) of a new tile to side 1 (right) of the
         # leftwards tile.
         self._traverse(lambda i: (0,i), lambda i: (0,i-1), 3, 1, grid)
-        
+
         # Solve all columns downwards
         # Match the side 0 (up) of a new tile to side 2 (down) of the upwards
         # tile.
         for col in range(self.extent):
             self._traverse(lambda i: (i,col), lambda i: (i-1,col), 0, 2, grid)
-        
+
         return grid
-    
+
     def _glue_grid(self):
         # Strip the tiles and glue them together into the image as specified in
         # self.grid. The tiles must already be orientated
@@ -117,15 +117,15 @@ class Board(object):
         for row in range(self.extent):
             # Glue the row together:
             lines += ["".join(self.tiles[self.grid[(row, i)]].lines[j] for i in range(self.extent)) for j in range(Tile.tile_size)]
-        
+
         return lines
-    
+
     def get_corners(self):
         # Retrieve product of tile IDs of each of the 4 corners of the grid
         corners = [(0,0), (0,self.extent-1), (self.extent-1,0), (self.extent-1,self.extent-1)]
-        
+
         return reduce(lambda a, b: int(a) * int(b), (self.grid[c] for c in corners))
-       
+
     def _search_monsters(self):
         # Search the image for monsters
         found = False
@@ -139,8 +139,8 @@ class Board(object):
                         line[j + jm] = "O"
                         self.image[i + im] = "".join(line)
 
-        return found  
-        
+        return found
+
     def _try_rotation(self):
         # Search for sea monsters in the 4 rotations of the image
         for i in range(4):
@@ -148,25 +148,29 @@ class Board(object):
                 return True
             self.image = utils.rotate(self.image)
         return False
-    
+
     def find_monsters(self):
         # Search for sea monsters in the 2x flipped * 4x rotation states of the
         # image. Return the water roughness i.e. how many hashs are not a part
-        # of a sea monster 
+        # of a sea monster
         if not self._try_rotation():
             self.image = utils.flip(self.image)
             assert(self._try_rotation())
-        
+
         return sum(1 for line in self.image for char in line if char == "#")
 
-def main():
-    sections = utils.get_sections(20)
-    
-    tiles = [Tile(section.split("\n")) for section in sections]
-    board = Board(tiles)
-    
-    print("PART 1:")
-    print(board.get_corners())
+class Day(object):
+    def __init__(self, parser):
+        self.parser = parser
 
-    print("PART 2:")
-    print(board.find_monsters())
+    def calculate(self):
+        sections = self.parser.get_sections()
+
+        tiles = [Tile(section.split("\n")) for section in sections]
+        self.board = Board(tiles)
+
+    def part_1(self):
+        return self.board.get_corners()
+
+    def part_2(self):
+        return self.board.find_monsters()
