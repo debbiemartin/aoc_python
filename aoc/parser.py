@@ -11,7 +11,7 @@ class Parser(object):
 
     def get_lines(self):
         with open(os.path.join("inputs", self.year, f"{self.day}.txt"), "r") as f:
-            return f.read().split("\n")
+            return list(filter(len, f.read().split("\n")))
 
     def get_sections(self):
         with open(os.path.join("inputs", self.year, f"{self.day}.txt"), "r") as f:
