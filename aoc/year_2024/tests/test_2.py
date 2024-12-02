@@ -1,5 +1,6 @@
 import pytest
 from aoc.year_2024.days.day_2 import Day
+from aoc.input_parser import ParserStub
 
 LINES = """7 6 4 2 1
 1 2 7 8 9
@@ -7,14 +8,6 @@ LINES = """7 6 4 2 1
 1 3 2 4 5
 8 6 4 4 1
 1 3 6 7 9"""
-
-
-class ParserStub(object):
-    def __init__(self, input):
-        self.input = input
-
-    def get_lines(self):
-        return self.input.split("\n")
 
 
 def test_safe():

@@ -20,3 +20,11 @@ class Parser(object):
     def get_sections_list(self):
         with open(os.path.join("inputs", str(self.year), f"{self.day}.txt"), "r") as f:
             return [s.strip("\n").split("\n") for s in f.read().split("\n\n")]
+
+
+class ParserStub(object):
+    def __init__(self, input):
+        self.input = input
+
+    def get_lines(self):
+        return self.input.split("\n")

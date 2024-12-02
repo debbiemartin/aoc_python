@@ -4,6 +4,9 @@ class Day(object):
 
     def calculate(self):
         lines = self.parser.get_lines()
+
+        [[]]
+
         self.lefts = [int(l.split()[0]) for l in lines]
         self.lefts.sort()
         self.rights = [int(l.split()[1]) for l in lines]

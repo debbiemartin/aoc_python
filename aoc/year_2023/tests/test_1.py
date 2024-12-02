@@ -1,5 +1,6 @@
 import pytest
 from aoc.year_2023.days.day_1 import Day
+from aoc.input_parser import ParserStub
 
 LINES_P1 = """1abc2
 pqr3stu8vwx
@@ -13,14 +14,6 @@ xtwone3four
 4nineeightseven2
 zoneight234
 7pqrstsixteen"""
-
-
-class ParserStub(object):
-    def __init__(self, input):
-        self.input = input
-
-    def get_lines(self):
-        return self.input.split("\n")
 
 
 def test_part_1():
