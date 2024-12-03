@@ -9,9 +9,13 @@ class Parser(object):
         self.year = year
         self.day = day
 
+    def get_numbers(self):
+        with open(os.path.join("inputs", str(self.year), f"{self.day}.txt"), "r") as f:
+            return [list(map(int, l.split())) for l in f.readlines()]
+
     def get_lines(self):
         with open(os.path.join("inputs", str(self.year), f"{self.day}.txt"), "r") as f:
-            return list(filter(len, f.read().split("\n")))
+            return list(filter(len, f.readlines()))
 
     def get_sections(self):
         with open(os.path.join("inputs", str(self.year), f"{self.day}.txt"), "r") as f:
