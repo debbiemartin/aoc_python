@@ -1,4 +1,5 @@
 from collections import defaultdict
+from functools import cmp_to_key
 
 
 class Day(object):
@@ -28,16 +29,13 @@ class Day(object):
                 self.incorrect.append(u)
 
     def find_correct(self, update):
-        correct = []
-        for u in update:
-            for i, c in enumerate(correct):
-                if c in self.rules[u]:
-                    correct.insert(i, u)
-                    break
-            else:
-                correct.append(u)
+        def sorted_by(a, b):
+            if b in self.rules[a]:
+                return 1
+            if a in self.rules[b]:
+                return -1
 
-        return correct
+        return sorted(update, key=cmp_to_key(sorted_by))
 
     def part_1(self):
         return sum(int(u[int((len(u)-1)/2)]) for u in self.correct)
