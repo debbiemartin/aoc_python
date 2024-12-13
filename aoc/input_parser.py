@@ -35,3 +35,6 @@ class ParserStub(object):
 
     def get_sections_list(self):
         return [s.strip("\n").split("\n") for s in self.input.split("\n\n")]
+
+    def get_sections(self):
+        return self.input.split("\n\n")
