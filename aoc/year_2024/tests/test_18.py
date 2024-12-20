@@ -37,7 +37,7 @@ def test_part_1():
     assert (d.part_1() == 22)
 
 
-def test_part_1():
+def test_part_2():
     d = Day(ParserStub(LINES))
     d.size = 6
     d.num_bytes = 12
